@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/app_router.dart';
 import 'shared/theme/app_theme.dart';
 
@@ -20,7 +21,11 @@ void main() {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(const KipApp());
+  runApp(
+    const ProviderScope(
+      child: KipApp(),
+    ),
+  );
 }
 
 class KipApp extends StatelessWidget {
