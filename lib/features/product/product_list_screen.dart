@@ -10,7 +10,10 @@ import '../../shared/theme/app_theme.dart';
 enum SortType { recommend, priceAsc, priceDesc, newest }
 
 class ProductListScreen extends ConsumerStatefulWidget {
-  const ProductListScreen({super.key});
+  /// 진입 시 적용할 카테고리 (홈 화면에서 카테고리 클릭 시 전달됨)
+  final ProductCategory? initialCategory;
+
+  const ProductListScreen({super.key, this.initialCategory});
 
   @override
   ConsumerState<ProductListScreen> createState() => _ProductListScreenState();
@@ -19,6 +22,21 @@ class ProductListScreen extends ConsumerStatefulWidget {
 class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   ProductCategory? _selectedCategory; // null = 전체
   SortType _sortType = SortType.recommend;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.initialCategory;
+  }
+
+  @override
+  void didUpdateWidget(covariant ProductListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 홈에서 다른 카테고리를 다시 선택했을 때도 반영
+    if (widget.initialCategory != oldWidget.initialCategory) {
+      setState(() => _selectedCategory = widget.initialCategory);
+    }
+  }
 
   List<Product> get _products {
     var list = MockProducts.byCategory(_selectedCategory);
@@ -112,7 +130,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.textMain),
-            onPressed: () {},
+            onPressed: () => context.push(AppRoutes.search),
           ),
           Stack(
             alignment: Alignment.center,
@@ -141,6 +159,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 ),
             ],
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: Column(

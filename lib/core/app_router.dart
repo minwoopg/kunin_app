@@ -6,11 +6,13 @@ import '../features/auth/signup_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/product/product_list_screen.dart';
 import '../features/product/product_detail_screen.dart';
+import '../features/search/search_screen.dart';
 import '../features/cart/cart_screen.dart';
 import '../features/order/order_screen.dart';
 import '../features/order/order_complete_screen.dart';
 import '../features/mypage/mypage_screen.dart';
 import '../features/mypage/order_history_screen.dart';
+import '../data/models/product_model.dart';
 import '../shared/widgets/main_scaffold.dart';
 
 // ─────────────────────────────────────────
@@ -25,11 +27,17 @@ class AppRoutes {
   static const String home          = '/home';
   static const String productList   = '/products';
   static const String productDetail = '/products/:id';
+  static const String search        = '/search';
   static const String cart          = '/cart';
   static const String order         = '/order';
   static const String orderComplete = '/order/complete';
   static const String mypage        = '/mypage';
   static const String orderHistory  = '/mypage/orders';
+
+  /// 카테고리 필터가 적용된 상품 목록 경로 생성
+  static String productListWithCategory(ProductCategory category) {
+    return '$productList?category=${category.name}';
+  }
 }
 
 // ─────────────────────────────────────────
@@ -59,6 +67,12 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const OrderCompleteScreen(),
     ),
 
+    // 검색
+    GoRoute(
+      path: AppRoutes.search,
+      builder: (context, state) => const SearchScreen(),
+    ),
+
     // 메인 탭 (하단 네비 있음)
     ShellRoute(
       builder: (context, state, child) => MainScaffold(child: child),
@@ -69,7 +83,18 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: AppRoutes.productList,
-          builder: (context, state) => const ProductListScreen(),
+          builder: (context, state) {
+            // 쿼리 파라미터로 전달된 카테고리 (예: /products?category=medicalDevice)
+            final categoryParam = state.uri.queryParameters['category'];
+            ProductCategory? initialCategory;
+            if (categoryParam != null) {
+              initialCategory = ProductCategory.values.firstWhere(
+                (c) => c.name == categoryParam,
+                orElse: () => ProductCategory.medicalDevice,
+              );
+            }
+            return ProductListScreen(initialCategory: initialCategory);
+          },
         ),
         GoRoute(
           path: AppRoutes.cart,

@@ -35,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.textMain),
-            onPressed: () {},
+            onPressed: () => context.push(AppRoutes.search),
           ),
           Stack(
             alignment: Alignment.center,
@@ -81,7 +81,7 @@ class HomeScreen extends ConsumerWidget {
 
               // 카테고리 바로가기
               _CategorySection(
-                onSelect: (cat) => context.go(AppRoutes.productList),
+                onSelect: (cat) => context.go(AppRoutes.productListWithCategory(cat)),
               ),
               const SizedBox(height: 28),
 
