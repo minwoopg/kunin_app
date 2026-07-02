@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/wishlist_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
@@ -50,10 +51,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               onTap: () => context.pop(),
             ),
             actions: [
-              _circleIconButton(
-                icon: Icons.favorite_border,
-                onTap: () {},
-              ),
+              // 찜 버튼 - 찜 상태에 따라 아이콘/색이 바뀝니다.
+              Consumer(builder: (context, ref, _) {
+                final isFav = ref.watch(wishlistProvider).contains(product.id);
+                return _circleIconButton(
+                  icon: isFav ? Icons.favorite : Icons.favorite_border,
+                  iconColor: isFav ? AppColors.error : null,
+                  onTap: () => ref.read(wishlistProvider.notifier).toggle(product.id),
+                );
+              }),
               const SizedBox(width: AppSpacing.sm),
               Stack(
                 alignment: Alignment.center,
@@ -192,7 +198,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     );
   }
 
-  Widget _circleIconButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _circleIconButton({required IconData icon, required VoidCallback onTap, Color? iconColor}) {
     return Padding(
       padding: const EdgeInsets.only(left: AppSpacing.md),
       child: GestureDetector(
@@ -204,7 +210,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.border, width: 0.8),
           ),
-          child: Icon(icon, size: 16, color: AppColors.textMain),
+          child: Icon(icon, size: 16, color: iconColor ?? AppColors.textMain),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/wishlist_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
@@ -204,6 +205,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     }
 
     final cartCount = ref.watch(cartCountProvider);
+    final favoriteIds = ref.watch(wishlistProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,6 +238,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               final product = _results[i];
               return ProductCard(
                 product: product,
+                isFavorite: favoriteIds.contains(product.id),
+                onFavoriteToggle: () =>
+                    ref.read(wishlistProvider.notifier).toggle(product.id),
                 onTap: () => context.push('/products/${product.id}'),
               );
             },

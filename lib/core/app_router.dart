@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../features/splash/splash_screen.dart';
 import '../features/auth/login_screen.dart';
@@ -11,6 +12,7 @@ import '../features/order/order_screen.dart';
 import '../features/order/order_complete_screen.dart';
 import '../features/mypage/mypage_screen.dart';
 import '../features/mypage/order_history_screen.dart';
+import '../features/mypage/wishlist_screen.dart';
 import '../data/models/product_model.dart';
 import '../shared/widgets/main_scaffold.dart';
 
@@ -32,6 +34,7 @@ class AppRoutes {
   static const String orderComplete = '/order/complete';
   static const String mypage        = '/mypage';
   static const String orderHistory  = '/mypage/orders';
+  static const String wishlist      = '/mypage/wishlist';
 
   /// 카테고리 필터가 적용된 상품 목록 경로 생성
   static String productListWithCategory(ProductCategory category) {
@@ -121,6 +124,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.orderHistory,
       builder: (context, state) => const OrderHistoryScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.wishlist,
+      builder: (context, state) => const WishlistScreen(),
     ),
   ],
 );

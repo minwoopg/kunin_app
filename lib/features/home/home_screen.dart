@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/wishlist_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
@@ -266,13 +267,15 @@ class _SectionHeader extends StatelessWidget {
 }
 
 // ── 상품 그리드 ─────────────────────────────
-// 카드 자체는 shared/widgets/product_card.dart의 공통 ProductCard를 사용합니다.
-class _ProductGrid extends StatelessWidget {
+// ConsumerWidget으로 변경: 카드마다 찜 상태를 watch해서 하트를 채우기 위함
+class _ProductGrid extends ConsumerWidget {
   final List<Product> products;
   const _ProductGrid({required this.products});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final favoriteIds = ref.watch(wishlistProvider);
+
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       shrinkWrap: true,
@@ -288,6 +291,8 @@ class _ProductGrid extends StatelessWidget {
         final product = products[i];
         return ProductCard(
           product: product,
+          isFavorite: favoriteIds.contains(product.id),
+          onFavoriteToggle: () => ref.read(wishlistProvider.notifier).toggle(product.id),
           onTap: () => context.push('/products/${product.id}'),
         );
       },

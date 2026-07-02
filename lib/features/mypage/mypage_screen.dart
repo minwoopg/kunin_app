@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/providers/order_provider.dart';
+import '../../core/providers/wishlist_provider.dart';
 import '../../shared/theme/app_theme.dart';
 
 class MypageScreen extends ConsumerStatefulWidget {
@@ -57,6 +58,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
   @override
   Widget build(BuildContext context) {
     final orderCount = ref.watch(orderProvider).length;
+    final wishlistCount = ref.watch(wishlistCountProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -77,7 +79,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
                 Container(
                   width: 56, height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.premiumPoint.withValues(alpha: 0.35),
+                    color: AppColors.premiumPoint.withOpacity(0.35),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.person_outline, color: AppColors.primaryPressed, size: 28),
@@ -173,7 +175,8 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
               _MenuItemData(
                 icon: Icons.favorite_border,
                 label: '찜한 상품',
-                onTap: () {},
+                trailingText: wishlistCount > 0 ? '$wishlistCount' : null,
+                onTap: () => context.push(AppRoutes.wishlist),
               ),
               _MenuItemData(
                 icon: Icons.history,
@@ -270,12 +273,14 @@ class _MenuItemData {
   final String label;
   final VoidCallback onTap;
   final bool isDestructive;
+  final String? trailingText;
 
   _MenuItemData({
     required this.icon,
     required this.label,
     required this.onTap,
     this.isDestructive = false,
+    this.trailingText,
   });
 }
 
@@ -334,6 +339,12 @@ class _MenuItem extends StatelessWidget {
             Icon(data.icon, size: 20, color: data.isDestructive ? AppColors.error : AppColors.textSub),
             const SizedBox(width: 14),
             Expanded(child: Text(data.label, style: AppTextStyles.body1.copyWith(color: color))),
+            if (data.trailingText != null) ...[
+              Text(data.trailingText!,
+                style: AppTextStyles.body2.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 6),
+            ],
             if (!data.isDestructive)
               const Icon(Icons.chevron_right, size: 18, color: AppColors.textHint),
           ],

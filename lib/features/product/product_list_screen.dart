@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/wishlist_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
@@ -116,6 +117,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     final cartCount = ref.watch(cartCountProvider);
+    final favoriteIds = ref.watch(wishlistProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -214,6 +216,9 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                       final product = _products[i];
                       return ProductCard(
                         product: product,
+                        isFavorite: favoriteIds.contains(product.id),
+                        onFavoriteToggle: () =>
+                            ref.read(wishlistProvider.notifier).toggle(product.id),
                         onTap: () => context.push('/products/${product.id}'),
                       );
                     },
