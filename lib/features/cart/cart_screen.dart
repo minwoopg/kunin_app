@@ -44,7 +44,7 @@ class CartScreen extends ConsumerWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    color: AppColors.premiumPoint.withOpacity(0.25),
+                    color: AppColors.premiumPoint.withValues(alpha: 0.25),
                     child: Text(
                       '₩${_format(freeShippingThreshold - totalPrice)} 더 구매하면 무료배송!',
                       style: AppTextStyles.body2.copyWith(
@@ -174,7 +174,7 @@ class _EmptyCart extends StatelessWidget {
           const SizedBox(height: 20),
           const Text('장바구니가 비어있습니다', style: AppTextStyles.h3),
           const SizedBox(height: 8),
-          Text('원하는 상품을 담아보세요', style: AppTextStyles.body2),
+          const Text('원하는 상품을 담아보세요', style: AppTextStyles.body2),
           const SizedBox(height: 28),
           SizedBox(
             width: 180, height: 48,

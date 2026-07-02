@@ -6,6 +6,7 @@ import '../../core/providers/cart_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/product_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -115,14 +116,14 @@ class _MainBanner extends StatelessWidget {
         height: 200,
         decoration: BoxDecoration(
           color: AppColors.premiumPoint,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
         ),
         child: Stack(
           children: [
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -159,7 +160,7 @@ class _MainBanner extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppColors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: const Text('SHOP NOW',
                       style: TextStyle(
@@ -265,6 +266,7 @@ class _SectionHeader extends StatelessWidget {
 }
 
 // ── 상품 그리드 ─────────────────────────────
+// 카드 자체는 shared/widgets/product_card.dart의 공통 ProductCard를 사용합니다.
 class _ProductGrid extends StatelessWidget {
   final List<Product> products;
   const _ProductGrid({required this.products});
@@ -282,101 +284,13 @@ class _ProductGrid extends StatelessWidget {
         childAspectRatio: 0.72,
       ),
       itemCount: products.length,
-      itemBuilder: (context, i) => _ProductCard(product: products[i]),
+      itemBuilder: (context, i) {
+        final product = products[i];
+        return ProductCard(
+          product: product,
+          onTap: () => context.push('/products/${product.id}'),
+        );
+      },
     );
-  }
-}
-
-class _ProductCard extends StatelessWidget {
-  final Product product;
-  const _ProductCard({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/products/${product.id}'),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border, width: 0.8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 이미지 영역
-            Expanded(
-              child: Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                    ),
-                    child: Center(
-                      child: Icon(_iconForCategory(product.category),
-                        size: 44, color: AppColors.premiumPoint),
-                    ),
-                  ),
-                  if (product.tag != ProductTag.none)
-                    Positioned(
-                      top: 8, left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: product.tag == ProductTag.best
-                              ? AppColors.primary
-                              : AppColors.textMain,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(product.tag.label,
-                          style: const TextStyle(
-                            fontSize: 10, fontWeight: FontWeight.w600,
-                            color: AppColors.white, letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            // 상품 정보
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(product.name,
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard', fontSize: 12,
-                      fontWeight: FontWeight.w500, color: AppColors.textMain,
-                    ),
-                    maxLines: 2, overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(product.formattedPrice,
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard', fontSize: 13,
-                      fontWeight: FontWeight.w700, color: AppColors.textMain,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _iconForCategory(ProductCategory category) {
-    switch (category) {
-      case ProductCategory.medicalDevice: return Icons.medical_services_outlined;
-      case ProductCategory.diagnostic:    return Icons.biotech_outlined;
-      case ProductCategory.beautyCare:    return Icons.spa_outlined;
-      case ProductCategory.medicine:      return Icons.medication_outlined;
-      case ProductCategory.health:        return Icons.health_and_safety_outlined;
-    }
   }
 }

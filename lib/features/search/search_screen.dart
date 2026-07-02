@@ -5,6 +5,7 @@ import '../../core/providers/cart_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/product_card.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -84,7 +85,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           margin: const EdgeInsets.only(right: 16),
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.md),
             border: Border.all(color: AppColors.border),
           ),
           child: Row(
@@ -233,7 +234,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             itemCount: _results.length,
             itemBuilder: (context, i) {
               final product = _results[i];
-              return _SearchResultCard(
+              return ProductCard(
                 product: product,
                 onTap: () => context.push('/products/${product.id}'),
               );
@@ -277,96 +278,5 @@ class _RecentChip extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-// ── 검색 결과 카드 ──────────────────────────
-class _SearchResultCard extends StatelessWidget {
-  final Product product;
-  final VoidCallback onTap;
-
-  const _SearchResultCard({required this.product, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border, width: 0.8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                    ),
-                    child: Center(
-                      child: Icon(_iconForCategory(product.category),
-                        size: 44, color: AppColors.premiumPoint),
-                    ),
-                  ),
-                  if (product.isSoldOut)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.35),
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                        ),
-                        child: const Center(
-                          child: Text('SOLD OUT',
-                            style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w700,
-                              fontSize: 13, letterSpacing: 1),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(product.name,
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard', fontSize: 12,
-                      fontWeight: FontWeight.w500, color: AppColors.textMain,
-                    ),
-                    maxLines: 2, overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(product.formattedPrice,
-                    style: const TextStyle(
-                      fontFamily: 'Pretendard', fontSize: 13,
-                      fontWeight: FontWeight.w700, color: AppColors.textMain,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _iconForCategory(ProductCategory category) {
-    switch (category) {
-      case ProductCategory.medicalDevice: return Icons.medical_services_outlined;
-      case ProductCategory.diagnostic:    return Icons.biotech_outlined;
-      case ProductCategory.beautyCare:    return Icons.spa_outlined;
-      case ProductCategory.medicine:      return Icons.medication_outlined;
-      case ProductCategory.health:        return Icons.health_and_safety_outlined;
-    }
   }
 }

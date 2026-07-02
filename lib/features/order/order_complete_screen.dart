@@ -25,7 +25,7 @@ class OrderCompleteScreen extends ConsumerWidget {
               Container(
                 width: 88, height: 88,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.12),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -43,7 +43,7 @@ class OrderCompleteScreen extends ConsumerWidget {
 
               const Text('주문이 완료되었습니다', style: AppTextStyles.h1),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 '주문해주셔서 감사합니다.\n주문 내역은 마이페이지에서 확인할 수 있습니다.',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.body2,

@@ -174,7 +174,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         onAddToCart: () {
           ref.read(cartProvider.notifier).addItem(product, quantity: _quantity);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${product.name} ${_quantity}개를 장바구니에 담았습니다.')),
+            SnackBar(content: Text('${product.name} $_quantity개를 장바구니에 담았습니다.')),
           );
         },
         onBuyNow: () {
@@ -362,11 +362,11 @@ class _BottomBar extends StatelessWidget {
           color: AppColors.cardBackground,
           border: Border(top: BorderSide(color: AppColors.border, width: 0.8)),
         ),
-        child: SizedBox(
+        child: const SizedBox(
           width: double.infinity, height: 52,
           child: ElevatedButton(
             onPressed: null,
-            child: const Text('품절된 상품입니다'),
+            child: Text('품절된 상품입니다'),
           ),
         ),
       );

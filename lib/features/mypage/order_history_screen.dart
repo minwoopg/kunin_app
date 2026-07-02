@@ -16,7 +16,24 @@ class OrderHistoryScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('주문 내역')),
+      appBar: AppBar(
+        title: const Text('주문 내역'),
+        leading: IconButton(
+          // push로 들어왔으면 뒤로가기, go로 바로 진입했으면(스택 없음) 홈으로 이동
+          icon: Icon(
+            Navigator.of(context).canPop()
+                ? Icons.arrow_back_ios_new
+                : Icons.home_outlined,
+          ),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.home);
+            }
+          },
+        ),
+      ),
       body: orders.isEmpty
           ? _EmptyOrders(onShopping: () => context.go(AppRoutes.productList))
           : ListView.separated(

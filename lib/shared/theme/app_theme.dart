@@ -32,6 +32,51 @@ class AppColors {
 }
 
 // ─────────────────────────────────────────
+//  KIP 앱 스페이싱 토큰
+//  화면마다 제각각이던 padding/margin 숫자를 여기 하나로 통일합니다.
+// ─────────────────────────────────────────
+class AppSpacing {
+  AppSpacing._();
+
+  static const double xs  = 4;
+  static const double sm  = 8;
+  static const double md  = 12;
+  static const double lg  = 16;
+  static const double xl  = 20;  // 화면 좌우 기본 여백으로 주로 사용
+  static const double xxl = 28;
+}
+
+// ─────────────────────────────────────────
+//  KIP 앱 라운드 토큰
+// ─────────────────────────────────────────
+class AppRadius {
+  AppRadius._();
+
+  static const double sm   = 4;   // 뱃지, 작은 태그
+  static const double md   = 8;   // 버튼, 인풋
+  static const double lg   = 12;  // 카드
+  static const double xl   = 16;  // 배너, 바텀시트
+  static const double pill = 999; // 칩, 원형 버튼
+}
+
+// ─────────────────────────────────────────
+//  KIP 앱 그림자 토큰
+//  기존의 "보더만 있는 플랫" 톤은 유지하되, 상품 카드처럼
+//  살짝 들뜬 느낌이 필요한 곳에만 아주 은은하게 사용합니다.
+// ─────────────────────────────────────────
+class AppShadows {
+  AppShadows._();
+
+  static List<BoxShadow> get card => [
+        BoxShadow(
+          color: AppColors.textMain.withOpacity(0.045),
+          blurRadius: 14,
+          offset: const Offset(0, 4),
+        ),
+      ];
+}
+
+// ─────────────────────────────────────────
 //  KIP 앱 텍스트 스타일
 // ─────────────────────────────────────────
 class AppTextStyles {
@@ -133,7 +178,7 @@ class AppTheme {
       fontFamily: 'Pretendard',
 
       // 컬러 스킴
-      colorScheme: const ColorScheme.light(
+      colorScheme: ColorScheme.light(
         primary:          AppColors.primary,
         onPrimary:        AppColors.white,
         secondary:        AppColors.premiumPoint,
@@ -170,7 +215,7 @@ class AppTheme {
           elevation:          0,
           minimumSize:        const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           textStyle: AppTextStyles.button,
         ).copyWith(
@@ -189,7 +234,7 @@ class AppTheme {
           side:               const BorderSide(color: AppColors.primary, width: 1.2),
           minimumSize:        const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           textStyle: AppTextStyles.button.copyWith(color: AppColors.primary),
         ),
@@ -213,19 +258,19 @@ class AppTheme {
         contentPadding:   const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle:        AppTextStyles.body1.copyWith(color: AppColors.textHint),
         border: OutlineInputBorder(
-          borderRadius:   BorderRadius.circular(8),
+          borderRadius:   BorderRadius.circular(AppRadius.md),
           borderSide:     const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius:   BorderRadius.circular(8),
+          borderRadius:   BorderRadius.circular(AppRadius.md),
           borderSide:     const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius:   BorderRadius.circular(8),
+          borderRadius:   BorderRadius.circular(AppRadius.md),
           borderSide:     const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius:   BorderRadius.circular(8),
+          borderRadius:   BorderRadius.circular(AppRadius.md),
           borderSide:     const BorderSide(color: AppColors.error),
         ),
       ),
@@ -235,7 +280,7 @@ class AppTheme {
         color:            AppColors.cardBackground,
         elevation:        0,
         shape: RoundedRectangleBorder(
-          borderRadius:   BorderRadius.circular(12),
+          borderRadius:   BorderRadius.circular(AppRadius.lg),
           side:           const BorderSide(color: AppColors.border, width: 0.8),
         ),
         margin:           EdgeInsets.zero,
@@ -263,7 +308,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor:  AppColors.textMain,
         contentTextStyle: AppTextStyles.body2.copyWith(color: AppColors.white),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
         behavior: SnackBarBehavior.floating,
       ),
     );

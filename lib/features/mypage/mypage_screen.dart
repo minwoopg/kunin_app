@@ -77,7 +77,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
                 Container(
                   width: 56, height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.premiumPoint.withOpacity(0.35),
+                    color: AppColors.premiumPoint.withValues(alpha: 0.35),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.person_outline, color: AppColors.primaryPressed, size: 28),

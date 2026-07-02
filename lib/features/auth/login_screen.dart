@@ -182,17 +182,17 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 36),
 
               // 소셜 로그인 구분선
-              Row(
+              const Row(
                 children: [
-                  const Expanded(child: Divider(color: AppColors.border)),
+                  Expanded(child: Divider(color: AppColors.border)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
                       '간편 로그인',
                       style: AppTextStyles.caption,
                     ),
                   ),
-                  const Expanded(child: Divider(color: AppColors.border)),
+                  Expanded(child: Divider(color: AppColors.border)),
                 ],
               ),
 
@@ -265,7 +265,7 @@ class _SocialButton extends StatelessWidget {
               : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
