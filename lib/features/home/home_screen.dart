@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/recently_viewed_provider.dart';
 import '../../core/providers/wishlist_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
@@ -94,6 +95,10 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               _ProductGrid(products: newProducts),
+
+              // 최근 본 상품 섹션 (기록이 있을 때만 표시)
+              const _RecentlyViewedSection(),
+
               const SizedBox(height: 40),
             ],
           ),
@@ -296,6 +301,52 @@ class _ProductGrid extends ConsumerWidget {
           onTap: () => context.push('/products/${product.id}'),
         );
       },
+    );
+  }
+}
+
+// ── 최근 본 상품 (가로 스크롤 미리보기) ────
+// 기록이 없으면 아무것도 그리지 않습니다 (SizedBox.shrink).
+class _RecentlyViewedSection extends ConsumerWidget {
+  const _RecentlyViewedSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final products = ref.watch(recentlyViewedProductsProvider);
+    if (products.isEmpty) return const SizedBox.shrink();
+
+    // 홈에서는 최근 8개까지만 미리보기로 보여주고, 전체는 "더보기"에서 확인합니다.
+    final preview = products.take(8).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 28),
+        _SectionHeader(
+          title: '최근 본 상품',
+          onTap: () => context.push(AppRoutes.recentlyViewed),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 205,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: preview.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final product = preview[i];
+              return SizedBox(
+                width: 140,
+                child: ProductCard(
+                  product: product,
+                  onTap: () => context.push('/products/${product.id}'),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

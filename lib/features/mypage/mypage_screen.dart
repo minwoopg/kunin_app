@@ -5,6 +5,7 @@ import '../../core/app_router.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/providers/order_provider.dart';
 import '../../core/providers/wishlist_provider.dart';
+import '../../core/providers/recently_viewed_provider.dart';
 import '../../shared/theme/app_theme.dart';
 
 class MypageScreen extends ConsumerStatefulWidget {
@@ -59,6 +60,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
   Widget build(BuildContext context) {
     final orderCount = ref.watch(orderProvider).length;
     final wishlistCount = ref.watch(wishlistCountProvider);
+    final recentCount = ref.watch(recentlyViewedCountProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -181,7 +183,8 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
               _MenuItemData(
                 icon: Icons.history,
                 label: '최근 본 상품',
-                onTap: () {},
+                trailingText: recentCount > 0 ? '$recentCount' : null,
+                onTap: () => context.push(AppRoutes.recentlyViewed),
               ),
             ],
           ),

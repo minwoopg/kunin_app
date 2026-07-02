@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/recently_viewed_provider.dart';
 import '../../core/providers/wishlist_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
@@ -20,6 +21,18 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _quantity = 1;
   int _tabIndex = 0; // 0: 상품정보, 1: 상세설명, 2: 리뷰
+
+  @override
+  void initState() {
+    super.initState();
+    // 첫 프레임이 그려진 뒤에 기록합니다. (빌드 중 provider 상태를 바꾸는 것을 피하기 위함)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final exists = MockProducts.findById(widget.productId) != null;
+      if (exists) {
+        ref.read(recentlyViewedProvider.notifier).addProduct(widget.productId);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
