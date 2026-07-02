@@ -6,6 +6,7 @@ import '../../core/providers/cart_provider.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/state_views.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final String productId;
@@ -26,7 +27,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     if (product == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('상품 상세')),
-        body: const Center(child: Text('상품을 찾을 수 없습니다.')),
+        body: ErrorStateView(
+          message: '상품을 찾을 수 없습니다.',
+          buttonLabel: '이전으로',
+          onRetry: () => context.pop(),
+        ),
       );
     }
 
@@ -49,7 +54,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 icon: Icons.favorite_border,
                 onTap: () {},
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -77,7 +82,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   }),
                 ],
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -99,20 +104,22 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, 0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 태그
                       if (product.tag != ProductTag.none)
                         Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 3),
                           decoration: BoxDecoration(
                             color: product.tag == ProductTag.best
                                 ? AppColors.primary
                                 : AppColors.textMain,
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
                           ),
                           child: Text(product.tag.label,
                             style: const TextStyle(
@@ -123,29 +130,29 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                         ),
                       // 상품명
                       Text(product.name, style: AppTextStyles.h2),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       // 가격
                       Text(product.formattedPrice, style: AppTextStyles.priceLarge),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       // 평점
                       if (product.reviewCount > 0)
                         Row(
                           children: [
                             const Icon(Icons.star, size: 14, color: AppColors.premiumPoint),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppSpacing.xs),
                             Text('${product.rating}', style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600)),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: AppSpacing.xs),
                             Text('리뷰 ${product.reviewCount}개', style: AppTextStyles.body2),
                           ],
                         ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       // 설명
                       Text(product.description, style: AppTextStyles.body2),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.xl),
                 const Divider(color: AppColors.divider, thickness: 6),
 
                 // 탭
@@ -157,11 +164,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 const Divider(height: 1, color: AppColors.border),
 
                 Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   child: _buildTabContent(product),
                 ),
 
-                const SizedBox(height: 100), // 하단바 여백
+                const SizedBox(height: 100), // 하단바(수량선택+버튼) 높이만큼 스크롤 여백 확보
               ],
             ),
           ),
@@ -174,7 +181,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         onAddToCart: () {
           ref.read(cartProvider.notifier).addItem(product, quantity: _quantity);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${product.name} $_quantity개를 장바구니에 담았습니다.')),
+            SnackBar(content: Text('${product.name} ${_quantity}개를 장바구니에 담았습니다.')),
           );
         },
         onBuyNow: () {
@@ -187,7 +194,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   Widget _circleIconButton({required IconData icon, required VoidCallback onTap}) {
     return Padding(
-      padding: const EdgeInsets.only(left: 12),
+      padding: const EdgeInsets.only(left: AppSpacing.md),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
@@ -289,7 +296,7 @@ class _ProductInfoTable extends StatelessWidget {
     return Column(
       children: rows.entries.map((e) {
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: Row(
             children: [
               SizedBox(width: 80, child: Text(e.key, style: AppTextStyles.body2)),
@@ -330,7 +337,7 @@ class _ReviewPlaceholder extends StatelessWidget {
             Text('전체 $reviewCount개의 리뷰', style: AppTextStyles.body2),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
         const Text('리뷰 목록 기능은 추후 업데이트됩니다.', style: AppTextStyles.body2),
       ],
     );
@@ -357,23 +364,29 @@ class _BottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (product.isSoldOut) {
       return Container(
-        padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.xl, AppSpacing.md, AppSpacing.xl,
+          AppSpacing.md + MediaQuery.of(context).padding.bottom,
+        ),
         decoration: const BoxDecoration(
           color: AppColors.cardBackground,
           border: Border(top: BorderSide(color: AppColors.border, width: 0.8)),
         ),
-        child: const SizedBox(
+        child: SizedBox(
           width: double.infinity, height: 52,
           child: ElevatedButton(
             onPressed: null,
-            child: Text('품절된 상품입니다'),
+            child: const Text('품절된 상품입니다'),
           ),
         ),
       );
     }
 
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.xl, AppSpacing.md, AppSpacing.xl,
+        AppSpacing.md + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: const BoxDecoration(
         color: AppColors.cardBackground,
         border: Border(top: BorderSide(color: AppColors.border, width: 0.8)),
@@ -396,7 +409,7 @@ class _BottomBar extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           // 버튼
           Row(
             children: [
@@ -454,7 +467,7 @@ class _QuantitySelector extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

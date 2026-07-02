@@ -5,6 +5,7 @@ import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
+import '../../shared/widgets/state_views.dart';
 
 class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
@@ -36,15 +37,21 @@ class CartScreen extends ConsumerWidget {
         ],
       ),
       body: cartItems.isEmpty
-          ? _EmptyCart(onShopping: () => context.go(AppRoutes.productList))
+          ? EmptyStateView(
+              icon: Icons.shopping_bag_outlined,
+              title: '장바구니가 비어있습니다',
+              subtitle: '원하는 상품을 담아보세요',
+              buttonLabel: '쇼핑 계속하기',
+              onButtonTap: () => context.go(AppRoutes.productList),
+            )
           : Column(
               children: [
                 // 무료배송 안내
                 if (shipping > 0)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    color: AppColors.premiumPoint.withValues(alpha: 0.25),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 10),
+                    color: AppColors.premiumPoint.withOpacity(0.25),
                     child: Text(
                       '₩${_format(freeShippingThreshold - totalPrice)} 더 구매하면 무료배송!',
                       style: AppTextStyles.body2.copyWith(
@@ -58,9 +65,9 @@ class CartScreen extends ConsumerWidget {
                 // 아이템 리스트
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(AppSpacing.xl),
                     itemCount: cartItems.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
                     itemBuilder: (context, i) {
                       return _CartItemCard(
                         item: cartItems[i],
@@ -77,7 +84,10 @@ class CartScreen extends ConsumerWidget {
 
                 // 결제 정보 + 주문 버튼
                 Container(
-                  padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + MediaQuery.of(context).padding.bottom),
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.xl, AppSpacing.lg, AppSpacing.xl,
+                    AppSpacing.lg + MediaQuery.of(context).padding.bottom,
+                  ),
                   decoration: const BoxDecoration(
                     color: AppColors.cardBackground,
                     border: Border(top: BorderSide(color: AppColors.border, width: 0.8)),
@@ -99,7 +109,7 @@ class CartScreen extends ConsumerWidget {
                           Text('₩${_format(finalPrice)}', style: AppTextStyles.priceLarge),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.lg),
                       SizedBox(
                         width: double.infinity, height: 52,
                         child: ElevatedButton(
@@ -120,7 +130,7 @@ class CartScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         title: const Text('장바구니 비우기', style: AppTextStyles.h3),
         content: const Text('장바구니에 담긴 모든 상품을 삭제하시겠습니까?', style: AppTextStyles.body2),
         actions: [
@@ -148,44 +158,6 @@ class CartScreen extends ConsumerWidget {
       buffer.write(str[i]);
     }
     return buffer.toString();
-  }
-}
-
-// ── 빈 장바구니 ──────────────────────────
-class _EmptyCart extends StatelessWidget {
-  final VoidCallback onShopping;
-  const _EmptyCart({required this.onShopping});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 88, height: 88,
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border, width: 0.8),
-            ),
-            child: const Icon(Icons.shopping_bag_outlined, size: 36, color: AppColors.textHint),
-          ),
-          const SizedBox(height: 20),
-          const Text('장바구니가 비어있습니다', style: AppTextStyles.h3),
-          const SizedBox(height: 8),
-          const Text('원하는 상품을 담아보세요', style: AppTextStyles.body2),
-          const SizedBox(height: 28),
-          SizedBox(
-            width: 180, height: 48,
-            child: OutlinedButton(
-              onPressed: onShopping,
-              child: const Text('쇼핑 계속하기'),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -243,11 +215,13 @@ class _CartItemCard extends StatelessWidget {
     final product = item.product;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(color: AppColors.border, width: 0.8),
+        // 상품 카드(product_card.dart)와 동일한 은은한 그림자로 통일
+        boxShadow: AppShadows.card,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,11 +231,11 @@ class _CartItemCard extends StatelessWidget {
             width: 64, height: 64,
             decoration: BoxDecoration(
               color: AppColors.background,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Icon(_iconForCategory(product.category), color: AppColors.premiumPoint, size: 28),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
 
           // 정보
           Expanded(
@@ -283,7 +257,7 @@ class _CartItemCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(product.formattedPrice, style: AppTextStyles.body2),
                 const SizedBox(height: 10),
 
