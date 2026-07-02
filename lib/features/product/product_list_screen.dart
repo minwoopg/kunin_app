@@ -9,7 +9,7 @@ import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/product_card.dart';
 
-enum SortType { recommend, priceAsc, priceDesc, newest }
+enum SortType { recommend, popularity, priceAsc, priceDesc, newest }
 
 class ProductListScreen extends ConsumerStatefulWidget {
   /// 진입 시 적용할 카테고리 (홈 화면에서 카테고리 클릭 시 전달됨)
@@ -24,6 +24,7 @@ class ProductListScreen extends ConsumerStatefulWidget {
 class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   ProductCategory? _selectedCategory; // null = 전체
   SortType _sortType = SortType.recommend;
+  bool _excludeSoldOut = false;
 
   @override
   void initState() {
@@ -43,6 +44,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   List<Product> get _products {
     var list = MockProducts.byCategory(_selectedCategory);
 
+    // 품절 제외 토글
+    if (_excludeSoldOut) {
+      list = list.where((p) => !p.isSoldOut).toList();
+    }
+
     switch (_sortType) {
       case SortType.priceAsc:
         list = [...list]..sort((a, b) => a.price.compareTo(b.price));
@@ -56,6 +62,10 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           if (a.tag != ProductTag.newItem && b.tag == ProductTag.newItem) return 1;
           return 0;
         });
+        break;
+      case SortType.popularity:
+        // 실 판매/조회 데이터가 없어 리뷰 수를 인기도 기준으로 사용하는 mock 정렬입니다.
+        list = [...list]..sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
         break;
       case SortType.recommend:
         break;
@@ -85,6 +95,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
               ),
               const SizedBox(height: 12),
               _sortOption('추천순', SortType.recommend),
+              _sortOption('인기순', SortType.popularity),
               _sortOption('신상품순', SortType.newest),
               _sortOption('낮은 가격순', SortType.priceAsc),
               _sortOption('높은 가격순', SortType.priceDesc),
@@ -183,15 +194,24 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                 Text('전체 ${_products.length}개',
                   style: AppTextStyles.body2,
                 ),
-                GestureDetector(
-                  onTap: _showSortSheet,
-                  child: Row(
-                    children: [
-                      Text(_sortLabel(_sortType), style: AppTextStyles.body2),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.unfold_more, size: 16, color: AppColors.textSub),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    _SoldOutToggleChip(
+                      value: _excludeSoldOut,
+                      onChanged: (v) => setState(() => _excludeSoldOut = v),
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: _showSortSheet,
+                      child: Row(
+                        children: [
+                          Text(_sortLabel(_sortType), style: AppTextStyles.body2),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.unfold_more, size: 16, color: AppColors.textSub),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -201,7 +221,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
           Expanded(
             child: _products.isEmpty
                 ? const Center(
-                    child: Text('해당 카테고리에 상품이 없습니다.', style: AppTextStyles.body2),
+                    child: Text('조건에 맞는 상품이 없습니다.', style: AppTextStyles.body2),
                   )
                 : GridView.builder(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
@@ -231,10 +251,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
 
   String _sortLabel(SortType type) {
     switch (type) {
-      case SortType.recommend: return '추천순';
-      case SortType.newest:    return '신상품순';
-      case SortType.priceAsc:  return '낮은 가격순';
-      case SortType.priceDesc: return '높은 가격순';
+      case SortType.recommend:  return '추천순';
+      case SortType.popularity: return '인기순';
+      case SortType.newest:     return '신상품순';
+      case SortType.priceAsc:   return '낮은 가격순';
+      case SortType.priceDesc:  return '높은 가격순';
     }
   }
 }
@@ -284,6 +305,46 @@ class _CategoryTabs extends StatelessWidget {
               color: isSelected ? AppColors.white : AppColors.textSub,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── 품절 제외 토글 칩 ─────────────────────
+class _SoldOutToggleChip extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SoldOutToggleChip({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: value ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: value ? AppColors.primary : AppColors.border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              value ? Icons.check_circle : Icons.circle_outlined,
+              size: 14,
+              color: value ? AppColors.primary : AppColors.textHint,
+            ),
+            const SizedBox(width: 4),
+            Text('품절 제외',
+              style: AppTextStyles.caption.copyWith(
+                color: value ? AppColors.primary : AppColors.textSub,
+                fontWeight: value ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
         ),
       ),
     );
