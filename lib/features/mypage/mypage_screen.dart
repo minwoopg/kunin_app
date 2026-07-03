@@ -6,6 +6,7 @@ import '../../core/services/auth_service.dart';
 import '../../core/providers/order_provider.dart';
 import '../../core/providers/wishlist_provider.dart';
 import '../../core/providers/recently_viewed_provider.dart';
+import '../../core/providers/address_provider.dart';
 import '../../shared/theme/app_theme.dart';
 
 class MypageScreen extends ConsumerStatefulWidget {
@@ -61,6 +62,7 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
     final orderCount = ref.watch(orderProvider).length;
     final wishlistCount = ref.watch(wishlistCountProvider);
     final recentCount = ref.watch(recentlyViewedCountProvider);
+    final addressCount = ref.watch(addressProvider).length;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -172,7 +174,8 @@ class _MypageScreenState extends ConsumerState<MypageScreen> {
               _MenuItemData(
                 icon: Icons.location_on_outlined,
                 label: '배송지 관리',
-                onTap: () {},
+                trailingText: addressCount > 0 ? '$addressCount' : null,
+                onTap: () => context.push(AppRoutes.addressList),
               ),
               _MenuItemData(
                 icon: Icons.favorite_border,

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
+import '../../core/providers/address_provider.dart';
 import '../../core/providers/cart_provider.dart';
 import '../../core/providers/order_provider.dart';
+import '../../data/models/address_model.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
 
@@ -15,13 +17,24 @@ class OrderScreen extends ConsumerStatefulWidget {
 }
 
 class _OrderScreenState extends ConsumerState<OrderScreen> {
-  // 임시 배송지 정보 (마이페이지 연동 전 기본값)
-  final _nameController    = TextEditingController(text: '홍길동');
-  final _phoneController   = TextEditingController(text: '010-1234-5678');
-  final _addressController = TextEditingController(text: '서울특별시 강남구 테헤란로 123 KIP빌딩 5층');
+  final _nameController    = TextEditingController();
+  final _phoneController   = TextEditingController();
+  final _addressController = TextEditingController();
   final _requestController = TextEditingController();
 
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 저장된 배송지 중 기본 배송지를 초기값으로 채웁니다.
+    final defaultAddress = ref.read(defaultAddressProvider);
+    if (defaultAddress != null) {
+      _nameController.text = defaultAddress.receiverName;
+      _phoneController.text = defaultAddress.phone;
+      _addressController.text = defaultAddress.fullAddress;
+    }
+  }
 
   @override
   void dispose() {
@@ -32,55 +45,17 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
     super.dispose();
   }
 
-  Future<void> _editAddress() async {
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.cardBackground,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            left: 20, right: 20, top: 20,
-            bottom: 20 + MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('배송지 정보 수정', style: AppTextStyles.h3),
-                const SizedBox(height: 20),
-                const Text('받는 사람', style: AppTextStyles.label),
-                const SizedBox(height: 6),
-                TextField(controller: _nameController, style: AppTextStyles.body1),
-                const SizedBox(height: 14),
-                const Text('연락처', style: AppTextStyles.label),
-                const SizedBox(height: 6),
-                TextField(controller: _phoneController, style: AppTextStyles.body1,
-                  keyboardType: TextInputType.phone),
-                const SizedBox(height: 14),
-                const Text('배송 주소', style: AppTextStyles.label),
-                const SizedBox(height: 6),
-                TextField(controller: _addressController, style: AppTextStyles.body1,
-                  maxLines: 2),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity, height: 50,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('완료'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    if (result == true) setState(() {});
+  /// 저장된 배송지 목록에서 다른 배송지를 선택합니다.
+  /// (배송지 자체를 관리/추가하려면 마이페이지 > 배송지 관리를 이용합니다.)
+  Future<void> _selectAddress() async {
+    final selected = await context.push<Address>('${AppRoutes.addressList}?select=true');
+    if (selected != null && mounted) {
+      setState(() {
+        _nameController.text = selected.receiverName;
+        _phoneController.text = selected.phone;
+        _addressController.text = selected.fullAddress;
+      });
+    }
   }
 
   Future<void> _onSubmitOrder(List<CartItem> items, int productPrice, int shippingFee) async {
@@ -89,7 +64,7 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
     setState(() => _isSubmitting = true);
     await Future.delayed(const Duration(milliseconds: 600)); // 임시 처리 딜레이
 
-    final order = ref.read(orderProvider.notifier).createOrder(
+    ref.read(orderProvider.notifier).createOrder(
       items: items,
       productPrice: productPrice,
       shippingFee: shippingFee,
@@ -150,7 +125,7 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
                       children: [
                         const Text('배송지 정보', style: AppTextStyles.h3),
                         GestureDetector(
-                          onTap: _editAddress,
+                          onTap: _selectAddress,
                           child: Text('변경',
                             style: AppTextStyles.body2.copyWith(
                               color: AppColors.primary, fontWeight: FontWeight.w600,
@@ -274,7 +249,7 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppColors.premiumPoint.withValues(alpha: 0.2),
+                  color: AppColors.premiumPoint.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

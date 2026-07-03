@@ -14,7 +14,10 @@ import '../features/mypage/mypage_screen.dart';
 import '../features/mypage/order_history_screen.dart';
 import '../features/mypage/wishlist_screen.dart';
 import '../features/mypage/recently_viewed_screen.dart';
+import '../features/mypage/address_list_screen.dart';
+import '../features/mypage/address_form_screen.dart';
 import '../data/models/product_model.dart';
+import '../data/models/address_model.dart';
 import '../shared/widgets/main_scaffold.dart';
 
 // ─────────────────────────────────────────
@@ -37,6 +40,8 @@ class AppRoutes {
   static const String orderHistory   = '/mypage/orders';
   static const String wishlist       = '/mypage/wishlist';
   static const String recentlyViewed = '/mypage/recent';
+  static const String addressList    = '/mypage/addresses';
+  static const String addressForm    = '/mypage/addresses/form';
 
   /// 카테고리 필터가 적용된 상품 목록 경로 생성
   static String productListWithCategory(ProductCategory category) {
@@ -134,6 +139,23 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.recentlyViewed,
       builder: (context, state) => const RecentlyViewedScreen(),
+    ),
+
+    // 배송지 목록 (관리 모드: /mypage/addresses, 선택 모드: /mypage/addresses?select=true)
+    GoRoute(
+      path: AppRoutes.addressList,
+      builder: (context, state) {
+        final selectMode = state.uri.queryParameters['select'] == 'true';
+        return AddressListScreen(selectMode: selectMode);
+      },
+    ),
+    // 배송지 추가/수정 (extra로 Address를 넘기면 수정, 안 넘기면 추가)
+    GoRoute(
+      path: AppRoutes.addressForm,
+      builder: (context, state) {
+        final existing = state.extra as Address?;
+        return AddressFormScreen(existing: existing);
+      },
     ),
   ],
 );
