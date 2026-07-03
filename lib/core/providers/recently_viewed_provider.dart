@@ -1,36 +1,44 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
+import '../../data/repositories/recently_viewed_repository.dart';
+
+/// 최근 본 상품 저장소 - SharedPreferences 기반 로컬 구현체를 사용합니다.
+/// (다른 도메인과 달리 이 영역은 나중에도 서버 API로 바꿀 계획이 없습니다.)
+final recentlyViewedRepositoryProvider = Provider<RecentlyViewedRepository>((ref) {
+  return LocalRecentlyViewedRepository();
+});
 
 /// 최근 본 상품 상태관리
-///
-/// 상품 ID를 "최근 조회 순서"대로 List에 보관합니다.
-/// 같은 상품을 다시 보면 기존 위치에서 제거하고 맨 앞으로 다시 추가해서
-/// 중복 없이 최신순을 유지합니다. 최대 20개까지만 보관합니다.
-///
-/// 지금은 메모리에만 저장되어 앱을 재시작하면 초기화됩니다.
+/// 실제 데이터는 Repository(SharedPreferences)가 들고 있고, 여기서는
+/// 앱 시작 시 한 번 불러온 뒤 Repository 호출 결과를 상태로 반영만 합니다.
 class RecentlyViewedNotifier extends StateNotifier<List<String>> {
-  RecentlyViewedNotifier() : super([]);
+  final RecentlyViewedRepository _repository;
 
-  static const int _maxItems = 20;
-
-  void addProduct(String productId) {
-    final updated = [productId, ...state.where((id) => id != productId)];
-    state = updated.length > _maxItems ? updated.sublist(0, _maxItems) : updated;
+  RecentlyViewedNotifier(this._repository) : super([]) {
+    _load();
   }
 
-  void remove(String productId) {
-    state = state.where((id) => id != productId).toList();
+  Future<void> _load() async {
+    state = await _repository.getRecentlyViewedIds();
   }
 
-  void clear() {
-    state = [];
+  Future<void> addProduct(String productId) async {
+    state = await _repository.addProduct(productId);
+  }
+
+  Future<void> remove(String productId) async {
+    state = await _repository.remove(productId);
+  }
+
+  Future<void> clear() async {
+    state = await _repository.clear();
   }
 }
 
 /// 최근 본 상품 ID 목록 (최신순)
 final recentlyViewedProvider = StateNotifierProvider<RecentlyViewedNotifier, List<String>>((ref) {
-  return RecentlyViewedNotifier();
+  return RecentlyViewedNotifier(ref.watch(recentlyViewedRepositoryProvider));
 });
 
 /// 최근 본 상품 개수
