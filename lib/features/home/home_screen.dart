@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/product_provider.dart';
 import '../../core/providers/recently_viewed_provider.dart';
 import '../../core/providers/wishlist_provider.dart';
-import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/product_card.dart';
+import '../../shared/widgets/state_views.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -16,10 +17,10 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartCount = ref.watch(cartCountProvider);
-    final newProducts = MockProducts.all
-        .where((p) => p.tag == ProductTag.newItem)
-        .take(4)
-        .toList();
+
+    // 신상품 태그가 붙은 상품만 조회 (Repository 경유, 비동기)
+    const newArrivalsQuery = ProductQuery(tag: ProductTag.newItem);
+    final newProductsAsync = ref.watch(productsProvider(newArrivalsQuery));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -72,7 +73,11 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
+        onRefresh: () async {
+          // 나중에 실제 API 연동 시 여기가 진짜 "새로고침"이 됩니다.
+          ref.invalidate(productsProvider(newArrivalsQuery));
+          await ref.read(productsProvider(newArrivalsQuery).future);
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -94,7 +99,15 @@ class HomeScreen extends ConsumerWidget {
                 onTap: () => context.go(AppRoutes.productList),
               ),
               const SizedBox(height: 12),
-              _ProductGrid(products: newProducts),
+              newProductsAsync.when(
+                data: (products) => _ProductGrid(products: products.take(4).toList()),
+                loading: () => const SizedBox(
+                  height: 240,
+                  child: LoadingStateView(),
+                ),
+                // 신상품 섹션 하나가 실패했다고 홈 전체를 에러 화면으로 막지 않고 조용히 숨깁니다.
+                error: (error, stack) => const SizedBox.shrink(),
+              ),
 
               // 최근 본 상품 섹션 (기록이 있을 때만 표시)
               const _RecentlyViewedSection(),
@@ -272,7 +285,6 @@ class _SectionHeader extends StatelessWidget {
 }
 
 // ── 상품 그리드 ─────────────────────────────
-// ConsumerWidget으로 변경: 카드마다 찜 상태를 watch해서 하트를 채우기 위함
 class _ProductGrid extends ConsumerWidget {
   final List<Product> products;
   const _ProductGrid({required this.products});
@@ -306,7 +318,6 @@ class _ProductGrid extends ConsumerWidget {
 }
 
 // ── 최근 본 상품 (가로 스크롤 미리보기) ────
-// 기록이 없으면 아무것도 그리지 않습니다 (SizedBox.shrink).
 class _RecentlyViewedSection extends ConsumerWidget {
   const _RecentlyViewedSection();
 
@@ -315,7 +326,6 @@ class _RecentlyViewedSection extends ConsumerWidget {
     final products = ref.watch(recentlyViewedProductsProvider);
     if (products.isEmpty) return const SizedBox.shrink();
 
-    // 홈에서는 최근 8개까지만 미리보기로 보여주고, 전체는 "더보기"에서 확인합니다.
     final preview = products.take(8).toList();
 
     return Column(

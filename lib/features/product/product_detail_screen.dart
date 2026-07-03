@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/product_provider.dart';
 import '../../core/providers/recently_viewed_provider.dart';
 import '../../core/providers/wishlist_provider.dart';
-import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/state_views.dart';
@@ -23,32 +23,48 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _tabIndex = 0; // 0: 상품정보, 1: 상세설명, 2: 리뷰
 
   @override
-  void initState() {
-    super.initState();
-    // 첫 프레임이 그려진 뒤에 기록합니다. (빌드 중 provider 상태를 바꾸는 것을 피하기 위함)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final exists = MockProducts.findById(widget.productId) != null;
-      if (exists) {
-        ref.read(recentlyViewedProvider.notifier).addProduct(widget.productId);
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final product = MockProducts.findById(widget.productId);
+    final productAsync = ref.watch(productDetailProvider(widget.productId));
 
-    if (product == null) {
-      return Scaffold(
+    // 상품 데이터를 성공적으로 불러온 시점에 "최근 본 상품"에 기록합니다.
+    // (이전에는 initState에서 즉시 기록했지만, 이제 데이터가 비동기로 오기 때문에
+    //  "실제로 로딩이 끝난 시점"에 기록하도록 ref.listen으로 옮겼습니다.)
+    ref.listen(productDetailProvider(widget.productId), (previous, next) {
+      next.whenData((product) {
+        if (product != null) {
+          ref.read(recentlyViewedProvider.notifier).addProduct(product.id);
+        }
+      });
+    });
+
+    return productAsync.when(
+      data: (product) {
+        if (product == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('상품 상세')),
+            body: ErrorStateView(
+              message: '상품을 찾을 수 없습니다.',
+              buttonLabel: '이전으로',
+              onRetry: () => context.pop(),
+            ),
+          );
+        }
+        return _buildContent(context, product);
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: const Text('상품 상세')),
+        body: const LoadingStateView(),
+      ),
+      error: (error, stack) => Scaffold(
         appBar: AppBar(title: const Text('상품 상세')),
         body: ErrorStateView(
-          message: '상품을 찾을 수 없습니다.',
-          buttonLabel: '이전으로',
-          onRetry: () => context.pop(),
+          onRetry: () => ref.invalidate(productDetailProvider(widget.productId)),
         ),
-      );
-    }
+      ),
+    );
+  }
 
+  Widget _buildContent(BuildContext context, Product product) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(

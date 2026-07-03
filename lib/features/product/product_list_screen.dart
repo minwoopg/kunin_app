@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/app_router.dart';
 import '../../core/providers/cart_provider.dart';
+import '../../core/providers/product_provider.dart';
 import '../../core/providers/wishlist_provider.dart';
-import '../../data/mock/mock_products.dart';
 import '../../data/models/product_model.dart';
 import '../../shared/theme/app_theme.dart';
 import '../../shared/widgets/product_card.dart';
+import '../../shared/widgets/state_views.dart';
 
 enum SortType { recommend, popularity, priceAsc, priceDesc, newest }
 
@@ -41,10 +42,11 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
     }
   }
 
-  List<Product> get _products {
-    var list = MockProducts.byCategory(_selectedCategory);
+  /// Repository에서 받아온 원본 목록에 정렬/품절제외 같은 "화면 전용" 처리를 적용합니다.
+  /// (카테고리/키워드 필터링은 Repository 쪽 책임이라 여기서 다루지 않습니다.)
+  List<Product> _applyLocalFilters(List<Product> source) {
+    var list = source;
 
-    // 품절 제외 토글
     if (_excludeSoldOut) {
       list = list.where((p) => !p.isSoldOut).toList();
     }
@@ -64,7 +66,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
         });
         break;
       case SortType.popularity:
-        // 실 판매/조회 데이터가 없어 리뷰 수를 인기도 기준으로 사용하는 mock 정렬입니다.
+        // 실 판매/조회 데이터가 없어 리뷰 수를 인기도 mock 기준으로 사용합니다.
         list = [...list]..sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
         break;
       case SortType.recommend:
@@ -129,6 +131,8 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
   Widget build(BuildContext context) {
     final cartCount = ref.watch(cartCountProvider);
     final favoriteIds = ref.watch(wishlistProvider);
+    final query = ProductQuery(category: _selectedCategory);
+    final productsAsync = ref.watch(productsProvider(query));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -178,71 +182,84 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
       ),
       body: Column(
         children: [
-          // 카테고리 탭
+          // 카테고리 탭 (데이터 로딩 여부와 무관하게 항상 보이도록 바깥에 둡니다)
           _CategoryTabs(
             selected: _selectedCategory,
             onSelect: (cat) => setState(() => _selectedCategory = cat),
           ),
           const Divider(height: 1, color: AppColors.border),
 
-          // 필터/정렬 바
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('전체 ${_products.length}개',
-                  style: AppTextStyles.body2,
-                ),
-                Row(
+          Expanded(
+            child: productsAsync.when(
+              data: (rawList) {
+                final products = _applyLocalFilters(rawList);
+                return Column(
                   children: [
-                    _SoldOutToggleChip(
-                      value: _excludeSoldOut,
-                      onChanged: (v) => setState(() => _excludeSoldOut = v),
-                    ),
-                    const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: _showSortSheet,
+                    // 필터/정렬 바
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(_sortLabel(_sortType), style: AppTextStyles.body2),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.unfold_more, size: 16, color: AppColors.textSub),
+                          Text('전체 ${products.length}개', style: AppTextStyles.body2),
+                          Row(
+                            children: [
+                              _SoldOutToggleChip(
+                                value: _excludeSoldOut,
+                                onChanged: (v) => setState(() => _excludeSoldOut = v),
+                              ),
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: _showSortSheet,
+                                child: Row(
+                                  children: [
+                                    Text(_sortLabel(_sortType), style: AppTextStyles.body2),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.unfold_more, size: 16, color: AppColors.textSub),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
 
-          // 상품 그리드
-          Expanded(
-            child: _products.isEmpty
-                ? const Center(
-                    child: Text('조건에 맞는 상품이 없습니다.', style: AppTextStyles.body2),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.72,
+                    // 상품 그리드
+                    Expanded(
+                      child: products.isEmpty
+                          ? const Center(
+                              child: Text('조건에 맞는 상품이 없습니다.', style: AppTextStyles.body2),
+                            )
+                          : GridView.builder(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 0.72,
+                              ),
+                              itemCount: products.length,
+                              itemBuilder: (context, i) {
+                                final product = products[i];
+                                return ProductCard(
+                                  product: product,
+                                  isFavorite: favoriteIds.contains(product.id),
+                                  onFavoriteToggle: () =>
+                                      ref.read(wishlistProvider.notifier).toggle(product.id),
+                                  onTap: () => context.push('/products/${product.id}'),
+                                );
+                              },
+                            ),
                     ),
-                    itemCount: _products.length,
-                    itemBuilder: (context, i) {
-                      final product = _products[i];
-                      return ProductCard(
-                        product: product,
-                        isFavorite: favoriteIds.contains(product.id),
-                        onFavoriteToggle: () =>
-                            ref.read(wishlistProvider.notifier).toggle(product.id),
-                        onTap: () => context.push('/products/${product.id}'),
-                      );
-                    },
-                  ),
+                  ],
+                );
+              },
+              loading: () => const LoadingStateView(),
+              error: (error, stack) => ErrorStateView(
+                onRetry: () => ref.invalidate(productsProvider(query)),
+              ),
+            ),
           ),
         ],
       ),
