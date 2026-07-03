@@ -1,4 +1,4 @@
-import '../../core/providers/cart_provider.dart';
+import 'cart_model.dart';
 
 enum OrderStatus {
   pending('주문확인중'),
@@ -47,5 +47,20 @@ class Order {
       buffer.write(str[i]);
     }
     return '₩$buffer';
+  }
+
+  Order copyWith({OrderStatus? status}) {
+    return Order(
+      id: id,
+      items: items,
+      productPrice: productPrice,
+      shippingFee: shippingFee,
+      totalPrice: totalPrice,
+      receiverName: receiverName,
+      receiverPhone: receiverPhone,
+      address: address,
+      orderedAt: orderedAt,
+      status: status ?? this.status,
+    );
   }
 }

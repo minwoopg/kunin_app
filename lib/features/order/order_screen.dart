@@ -64,7 +64,10 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
     setState(() => _isSubmitting = true);
     await Future.delayed(const Duration(milliseconds: 600)); // 임시 처리 딜레이
 
-    ref.read(orderProvider.notifier).createOrder(
+    // 주문 생성과 장바구니 비우기 모두 이제 Repository를 거치는 비동기 작업입니다.
+    // (Mock이라 사실상 즉시 끝나지만, 실제 API에서는 진짜로 기다려야 하는 부분이라
+    //  await로 순서를 명확히 해둡니다.)
+    await ref.read(orderProvider.notifier).createOrder(
       items: items,
       productPrice: productPrice,
       shippingFee: shippingFee,
@@ -72,9 +75,7 @@ class _OrderScreenState extends ConsumerState<OrderScreen> {
       receiverPhone: _phoneController.text,
       address: _addressController.text,
     );
-
-    // 장바구니 비우기
-    ref.read(cartProvider.notifier).clear();
+    await ref.read(cartProvider.notifier).clear();
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);

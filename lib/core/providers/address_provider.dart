@@ -1,12 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/address_model.dart';
+import '../../data/repositories/address_repository.dart';
 
-/// 배송지 관리 상태관리 (mock)
+/// 배송지 저장소 - 지금은 Mock 구현체를 사용합니다.
+final addressRepositoryProvider = Provider<AddressRepository>((ref) {
+  return MockAddressRepository();
+});
+
+/// 배송지 상태관리
 ///
-/// 실제 API 없이 메모리에서만 관리합니다. 기존에 주문서 작성 화면에 하드코딩되어
-/// 있던 배송지 값을 기본 시드로 넣어두어, 기능 추가 전후로 첫 화면 동작이 동일합니다.
+/// 다른 도메인(장바구니/주문/찜)과 달리 이 Notifier만 예외적으로
+/// **초기 상태를 동기적으로 시드**합니다. 주문서 작성 화면이 initState에서
+/// "기본 배송지"를 즉시 읽어와 입력창을 채우는데, 만약 초기 상태를 Repository에서
+/// 비동기로 가져오게 하면 그 사이의 짧은 순간에 배송지가 비어있는 것으로 보일 수
+/// 있기 때문입니다. 추가/수정/삭제/기본설정 같은 이후의 모든 변경은 그대로
+/// Repository를 거칩니다.
 class AddressNotifier extends StateNotifier<List<Address>> {
-  AddressNotifier() : super([_seed]);
+  final AddressRepository _repository;
+
+  AddressNotifier(this._repository) : super(const [_seed]);
 
   static const _seed = Address(
     id: 'addr_default',
@@ -17,41 +29,39 @@ class AddressNotifier extends StateNotifier<List<Address>> {
     isDefault: true,
   );
 
-  String generateId() => 'addr_${DateTime.now().millisecondsSinceEpoch}';
-
-  void add(Address address) {
-    final list = address.isDefault
-        ? state.map((a) => a.copyWith(isDefault: false)).toList()
-        : [...state];
-    state = [...list, address];
+  Future<void> add({
+    required String label,
+    required String receiverName,
+    required String phone,
+    required String address,
+    String addressDetail = '',
+    bool isDefault = false,
+  }) async {
+    state = await _repository.addAddress(
+      label: label,
+      receiverName: receiverName,
+      phone: phone,
+      address: address,
+      addressDetail: addressDetail,
+      isDefault: isDefault,
+    );
   }
 
-  void update(Address updated) {
-    state = state.map((a) {
-      if (a.id == updated.id) return updated;
-      if (updated.isDefault) return a.copyWith(isDefault: false);
-      return a;
-    }).toList();
+  Future<void> update(Address updated) async {
+    state = await _repository.updateAddress(updated);
   }
 
-  void remove(String id) {
-    final removingDefault = state.any((a) => a.id == id && a.isDefault);
-    final updated = state.where((a) => a.id != id).toList();
-
-    // 기본 배송지를 삭제했다면 남은 것 중 첫 번째를 새 기본 배송지로 지정합니다.
-    if (removingDefault && updated.isNotEmpty) {
-      updated[0] = updated[0].copyWith(isDefault: true);
-    }
-    state = updated;
+  Future<void> remove(String id) async {
+    state = await _repository.removeAddress(id);
   }
 
-  void setDefault(String id) {
-    state = state.map((a) => a.copyWith(isDefault: a.id == id)).toList();
+  Future<void> setDefault(String id) async {
+    state = await _repository.setDefaultAddress(id);
   }
 }
 
 final addressProvider = StateNotifierProvider<AddressNotifier, List<Address>>((ref) {
-  return AddressNotifier();
+  return AddressNotifier(ref.watch(addressRepositoryProvider));
 });
 
 /// 기본 배송지 (지정된 게 없으면 첫 번째, 목록이 비었으면 null)

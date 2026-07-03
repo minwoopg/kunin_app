@@ -49,7 +49,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final label   = _labelController.text.trim();
     final name    = _nameController.text.trim();
     final phone   = _phoneController.text.trim();
@@ -65,7 +65,7 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
     final notifier = ref.read(addressProvider.notifier);
 
     if (_isEditing) {
-      notifier.update(widget.existing!.copyWith(
+      await notifier.update(widget.existing!.copyWith(
         label: label,
         receiverName: name,
         phone: phone,
@@ -74,18 +74,18 @@ class _AddressFormScreenState extends ConsumerState<AddressFormScreen> {
         isDefault: _isDefault,
       ));
     } else {
-      notifier.add(Address(
-        id: notifier.generateId(),
+      // id는 Repository가 채번하므로 여기서는 넘기지 않습니다.
+      await notifier.add(
         label: label,
         receiverName: name,
         phone: phone,
         address: address,
         addressDetail: _detailController.text.trim(),
         isDefault: _isDefault,
-      ));
+      );
     }
 
-    Navigator.pop(context);
+    if (mounted) Navigator.pop(context);
   }
 
   @override
